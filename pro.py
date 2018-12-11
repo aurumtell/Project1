@@ -1,12 +1,13 @@
 import sys
 from PyQt5 import uic
-from PIL import Image
+from PIL import Image, ImageFont
 from PIL import ImageFilter, ImageDraw
 
 from custom_dialog import MyDialog
 
 
 from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog, QFontDialog, QLabel, QDialog)
+
 
 
 
@@ -19,7 +20,7 @@ class MyWidget(QMainWindow):
         self.obzor.clicked.connect(self.obzor_f)
         self.filtrs.clicked.connect(self.filtrs_f)
         self.rotate.clicked.connect(self.rotate_f)
-        # self.brightness.clicked.connect(self.brightness_f)
+        self.brightness.clicked.connect(self.brightness_f)
         self.text.clicked.connect(self.text_f)
 
     def obzor_f(self):
@@ -27,8 +28,6 @@ class MyWidget(QMainWindow):
         global f
         f = open(fname, 'r')
 
-        with f:
-            print(f.name)
 
     def filtrs_f(self):
         i, okBtnPressed = QInputDialog.getItem(
@@ -104,7 +103,13 @@ class MyWidget(QMainWindow):
         out_im = im.rotate(int(value_gradus))
         out_im.save('/home/odmin/ROTATE.jpg')
 
+    def text_edit(self, value_x, value_y, text_im, text_color, font):
+        draw = ImageDraw.Draw(f.name)
+        out_im = draw.text((int(value_x), int(value_y)), text_im, text_color, font=font)
+        out_im.save("'/home/odmin/TEXT.jpg'")
+
     def text_f(self):
+        global text_im, text_color
         self.myDialog = MyDialog()
         # self.myDialog.show()
         # self.connect(self.myDialog, SIGNAL("closed()"), self.OnCustomWinClosed)
@@ -118,22 +123,65 @@ class MyWidget(QMainWindow):
             self, "Введите информацию для создания текста", "Текст"
         )
         if okBtnPressed:
-            self.text_im = i
+            text_im = i
 
         color = QColorDialog.getColor()
         if color.isValid():
-            self.text_color = color.name()
+            text_color = color.name()
 
-        font, ok = QFontDialog.getFont()
+        i, okBtnPressed = QInputDialog.getItem(
+            self,
+            "Выберите шрифт",
+            "Шрифты",
+            ('Abyssinica SIL', 'Symbola_hint', 'Ubuntu_B'),
+            1, False
+        )
+        if okBtnPressed:
+            font = i
 
-        out_im = Image.open(f.name)
-        imgDrawer = ImageDraw.Draw(out_im)
-        imgDrawer.text((value_x, value_y), self.text_im, font=font)
-        out_im.save('/home/odmin/TEXT_APPEND.jpg')
+        i, okBtnPressed = QInputDialog.getText(
+            self, "Введите число", "Размер шрифта"
+        )
+        if okBtnPressed:
+            value_font = i
 
-        # word = '<span style=\" color: %s;\">%s</span>' % (self.text_color, self.text_im)
-        # print(word)
+        if font == 'Abyssinica SIL':
+            font = ImageFont.truetype('AbyssinicaSIL-R.ttf', int(value_font))
+        elif font == 'Symbola_hint':
+            font = ImageFont.truetype('Symbola_hint.ttf', int(value_font))
+        elif font == 'Ubuntu_B':
+            font = ImageFont.truetype('Ubuntu_B.ttf', int(value_font))
 
+        self.text_edit(value_x, value_y, text_im, text_color, font)
+
+    def brightness_f(self):
+        i, okBtnPressed = QInputDialog.getText(
+            self, "Введите число", "Яркость"
+        )
+        if okBtnPressed:
+            brightness = i
+            self.brightness_edit(brightness)
+
+
+    def brightness_edit(self, brightness):
+        im = f.name
+        source = Image.open(im)
+        result = Image.new('RGB', source.size)
+        for x in range(source.size[0]):
+            for y in range(source.size[1]):
+                r, g, b = source.getpixel((x, y))
+
+                red = int(r * int(brightness))
+                red = min(255, max(0, red))
+
+                green = int(g * int(brightness))
+                green = min(255, max(0, green))
+
+                blue = int(b * int(brightness))
+                blue = min(255, max(0, blue))
+
+                result.putpixel((x, y), (red, green, blue))
+        result.save('/home/odmin/BRIGHTNESS.jpg')
 
 app = QApplication(sys.argv)
 ex = MyWidget()
