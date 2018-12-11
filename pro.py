@@ -3,8 +3,12 @@ from PyQt5 import uic
 from PIL import Image
 from PIL import ImageFilter, ImageDraw
 
+from custom_dialog import MyDialog
 
-from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog, QFontDialog, QLabel)
+
+from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog, QFontDialog, QLabel, QDialog)
+
+
 
 
 class MyWidget(QMainWindow):
@@ -101,22 +105,34 @@ class MyWidget(QMainWindow):
         out_im.save('/home/odmin/ROTATE.jpg')
 
     def text_f(self):
+        self.myDialog = MyDialog()
+        # self.myDialog.show()
+        # self.connect(self.myDialog, SIGNAL("closed()"), self.OnCustomWinClosed)
+
+        returnCode = self.myDialog.exec_()
+        print(returnCode)
+        value_x, value_y = self.myDialog.get_value()
+
+
         i, okBtnPressed = QInputDialog.getText(
             self, "Введите информацию для создания текста", "Текст"
         )
         if okBtnPressed:
-            text = i
+            self.text_im = i
 
         color = QColorDialog.getColor()
         if color.isValid():
-            text_color = color
+            self.text_color = color.name()
 
-        # font, ok = QFontDialog.getFont()
-        # if ok:
-        #     self.lbl.setFont(font)
+        font, ok = QFontDialog.getFont()
 
-        print(str(text_color) + 'Hello World!')
+        out_im = Image.open(f.name)
+        imgDrawer = ImageDraw.Draw(out_im)
+        imgDrawer.text((value_x, value_y), self.text_im, font=font)
+        out_im.save('/home/odmin/TEXT_APPEND.jpg')
 
+        # word = '<span style=\" color: %s;\">%s</span>' % (self.text_color, self.text_im)
+        # print(word)
 
 
 app = QApplication(sys.argv)
