@@ -1,12 +1,16 @@
 import sys
+
+from PyQt5.Qt import Qt
+
 from PyQt5 import uic
 from PIL import Image, ImageFont
 from PIL import ImageFilter, ImageDraw
+from PyQt5.QtGui import QPixmap
 
 from custom_dialog import MyDialog
 
 
-from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog, QFontDialog, QLabel, QDialog)
+from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog,  QLabel)
 
 
 
@@ -15,10 +19,12 @@ from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialo
 class MyWidget(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.label = QLabel(self)
         uic.loadUi('untitled.ui', self)
 
         self.obzor.clicked.connect(self.obzor_f)
         self.filtrs.clicked.connect(self.filtrs_f)
+        self.contrast.clicked.connect(self.contrast_f)
         self.rotate.clicked.connect(self.rotate_f)
         self.brightness.clicked.connect(self.brightness_f)
         self.text.clicked.connect(self.text_f)
@@ -27,6 +33,13 @@ class MyWidget(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')[0]
         global f
         f = open(fname, 'r')
+
+        pixmap = QPixmap(f.name)
+
+        self.label.setPixmap(pixmap)
+        myScaledPixmap = pixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
+        self.label.setPixmap(myScaledPixmap)
+
 
 
     def filtrs_f(self):
@@ -104,12 +117,13 @@ class MyWidget(QMainWindow):
         out_im.save('/home/odmin/ROTATE.jpg')
 
     def text_edit(self, value_x, value_y, text_im, text_color, font):
-        draw = ImageDraw.Draw(f.name)
-        out_im = draw.text((int(value_x), int(value_y)), text_im, text_color, font=font)
-        out_im.save("'/home/odmin/TEXT.jpg'")
+        im = Image.open(f.name)
+        draw = ImageDraw.Draw(im)
+        draw.text((int(value_x), int(value_y)), text_im, text_color, font=font)
+        im.save("/home/odmin/TEXT.jpg")
 
     def text_f(self):
-        global text_im, text_color
+        global text_im, text_color, font
         self.myDialog = MyDialog()
         # self.myDialog.show()
         # self.connect(self.myDialog, SIGNAL("closed()"), self.OnCustomWinClosed)
@@ -182,6 +196,44 @@ class MyWidget(QMainWindow):
 
                 result.putpixel((x, y), (red, green, blue))
         result.save('/home/odmin/BRIGHTNESS.jpg')
+
+    def contrast_f(self):
+        i, okBtnPressed = QInputDialog.getText(
+            self, "Введите число", "Контрастность"
+        )
+        if okBtnPressed:
+            contrast = i
+            self.contrast_edit(contrast)
+
+    def contrast_edit(self, contrast):
+        source = Image.open(f.name)
+        result = Image.new('RGB', source.size)
+
+        avg = 0
+        for x in range(source.size[0]):
+            for y in range(source.size[1]):
+                r, g, b = source.getpixel((x, y))
+                avg += r * 0.299 + g * 0.587 + b * 0.114
+        avg /= source.size[0] * source.size[1]
+
+        palette = []
+        for i in range(256):
+            temp = int(avg + int(contrast) * (i - avg))
+            if temp < 0:
+                temp = 0
+            elif temp > 255:
+                temp = 255
+            palette.append(temp)
+
+        for x in range(source.size[0]):
+            for y in range(source.size[1]):
+                r, g, b = source.getpixel((x, y))
+                result.putpixel((x, y), (palette[r], palette[g], palette[b]))
+
+        result.save("/home/odmin/CONTRAST.jpg")
+
+
+
 
 app = QApplication(sys.argv)
 ex = MyWidget()

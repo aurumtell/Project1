@@ -17,10 +17,10 @@
    <widget class="QPushButton" name="obzor">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>190</y>
-      <width>87</width>
-      <height>29</height>
+      <x>20</x>
+      <y>20</y>
+      <width>111</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="filtrs">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>90</y>
+      <x>600</x>
+      <y>80</y>
       <width>161</width>
       <height>29</height>
      </rect>
@@ -43,8 +43,8 @@
    <widget class="QPushButton" name="rotate">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>140</y>
+      <x>600</x>
+      <y>130</y>
       <width>161</width>
       <height>29</height>
      </rect>
@@ -56,8 +56,8 @@
    <widget class="QPushButton" name="brightness">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>190</y>
+      <x>600</x>
+      <y>180</y>
       <width>161</width>
       <height>29</height>
      </rect>
@@ -66,30 +66,56 @@
      <string>Яркость</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="noise">
+   <widget class="QPushButton" name="contrast">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>240</y>
+      <x>600</x>
+      <y>230</y>
       <width>161</width>
       <height>29</height>
      </rect>
     </property>
     <property name="text">
-     <string>Добавление шумов</string>
+     <string>Контрастность</string>
     </property>
    </widget>
    <widget class="QPushButton" name="text">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>290</y>
+      <x>600</x>
+      <y>280</y>
       <width>161</width>
       <height>29</height>
      </rect>
     </property>
     <property name="text">
      <string>Текст</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>500</y>
+      <width>87</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Сохранить</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>70</y>
+      <width>541</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>
