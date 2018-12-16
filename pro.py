@@ -1,20 +1,13 @@
 import sys
-
 from PIL.ImageQt import ImageQt
 from PyQt5.Qt import Qt
-
 from PyQt5 import uic
 from PIL import Image, ImageFont
 from PIL import ImageFilter, ImageDraw
 from PyQt5.QtGui import QPixmap
-
 from custom_dialog import MyDialog
-
-
-from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog,  QLabel)
-
-
-
+from PyQt5.QtWidgets import (QMainWindow, QFileDialog, QApplication, QInputDialog, QColorDialog, QLabel, QMessageBox,
+                             QLCDNumber, QSlider, QVBoxLayout)
 
 
 class MyWidget(QMainWindow):
@@ -24,6 +17,7 @@ class MyWidget(QMainWindow):
         uic.loadUi('untitled.ui', self)
         self.fname = ''
         self.im = ''
+        # кнопки главного меню
         self.obzor.clicked.connect(self.obzor_f)
         self.save.clicked.connect(self.save_f)
         self.filtrs.clicked.connect(self.filtrs_f)
@@ -31,6 +25,7 @@ class MyWidget(QMainWindow):
         self.rotate.clicked.connect(self.rotate_f)
         self.brightness.clicked.connect(self.brightness_f)
         self.text.clicked.connect(self.text_f)
+        # первоначально оставляем их неактивными
         self.save.setEnabled(False)
         self.contrast.setEnabled(False)
         self.rotate.setEnabled(False)
@@ -38,21 +33,20 @@ class MyWidget(QMainWindow):
         self.text.setEnabled(False)
         self.filtrs.setEnabled(False)
 
-
-
-
-
-
-    def save_f(self):
-        self.imName, _ = QFileDialog.getSaveFileName(self, "Save File", "",  "IMAGE FILES (*.JPEG)")
-        self.im.save(self.imName, 'jpeg')
-
-
-
+    def showDialog(self):
+        # функция показа окна с выводом ошибки
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowTitle("Произошла ошибка")
+        msg.setText("Вы ввели неверное значение.Повторите попытку.")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        retval = msg.exec_()
 
     def obzor_f(self):
+        # функция выбора файла
         self.fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')[0]
         self.pixmap_f(self.fname)
+        # кнопки становятся активными при выборе файла
         if self.fname != '':
             self.save.setEnabled(True)
             self.contrast.setEnabled(True)
@@ -61,8 +55,13 @@ class MyWidget(QMainWindow):
             self.text.setEnabled(True)
             self.filtrs.setEnabled(True)
 
+    def save_f(self):
+        # функция сохранения файла
+        self.imName, _ = QFileDialog.getSaveFileName(self, "Save File", "",  "IMAGE FILES (*.JPEG)")
+        self.im.save(self.imName, 'jpeg')
 
     def pixmap_f(self, im):
+        # функция показа изображения,как и результат после той или иной функции
         if isinstance(im, str):
 
             pixmap = QPixmap(im)
@@ -72,9 +71,8 @@ class MyWidget(QMainWindow):
         myScaledPixmap = pixmap.scaled(self.label.size(), Qt.KeepAspectRatio)
         self.label.setPixmap(myScaledPixmap)
 
-
-
     def filtrs_f(self):
+        # функция вывода диалогового окна с выбором фильтра
         i, okBtnPressed = QInputDialog.getItem(
             self,
             "Выберите фильтр",
@@ -89,6 +87,7 @@ class MyWidget(QMainWindow):
             self.filtr_edit(filtr, self.fname)
 
     def filtr_edit(self, filtr, file):
+        # функция создания фильтров и их наложения на изображение
             self.im = Image.open(file)
             pixels = self.im.load()  # список с пикселями
             x, y = self.im.size
@@ -159,36 +158,38 @@ class MyWidget(QMainWindow):
                 # out_im.save('/home/odmin/SMOOTH_MORE.jpg')
 
     def rotate_f(self):
+        # функция вывода диалогового окна с вводом градусов
         i, okBtnPressed = QInputDialog.getText(
             self, "Введите число", "Градусы"
         )
         if okBtnPressed:
             value_gradus = i
-            self.rotate_edit(value_gradus, self.fname)
+            if value_gradus.isdigit():
+                self.rotate_edit(value_gradus, self.fname)
+            else:
+                self.showDialog()
+                self.rotate_f()
 
     def rotate_edit(self, value_gradus, file):
+        # функция поворота изображения
         self.im = Image.open(file)  # открываем картинку
         self.im = self.im.rotate(int(value_gradus))
         self.pixmap_f(ImageQt(self.im))
-        # im.save('/home/odmin/ROTATE.jpg')
+
 
     def text_edit(self, value_x, value_y, text_im, text_color, font, file):
+        # функция наложения текста на изображение
         self.im = Image.open(file)
         draw = ImageDraw.Draw(self.im)
         draw.text((int(value_x), int(value_y)), text_im, text_color, font=font)
         self.pixmap_f(ImageQt(self.im))
-        # im.save("/home/odmin/TEXT.jpg")
 
     def text_f(self):
-        global text_im, text_color, font
+        # функция с последовательным выводом диалоговых окон на введение параметров
+        global text_im, text_color, font, value_font
         self.myDialog = MyDialog()
-        # self.myDialog.show()
-        # self.connect(self.myDialog, SIGNAL("closed()"), self.OnCustomWinClosed)
-
         returnCode = self.myDialog.exec_()
-        print(returnCode)
         value_x, value_y = self.myDialog.get_value()
-
 
         i, okBtnPressed = QInputDialog.getText(
             self, "Введите информацию для создания текста", "Текст"
@@ -215,6 +216,9 @@ class MyWidget(QMainWindow):
         )
         if okBtnPressed:
             value_font = i
+            if not value_font.isdigit():
+                self.showDialog()
+                self.text_f()
 
         if font == 'Abyssinica SIL':
             font = ImageFont.truetype('AbyssinicaSIL-R.ttf', int(value_font))
@@ -226,15 +230,20 @@ class MyWidget(QMainWindow):
         self.text_edit(value_x, value_y, text_im, text_color, font, self.fname)
 
     def brightness_f(self):
+        # функция для вывода диалогового окна для ввода яркости
         i, okBtnPressed = QInputDialog.getText(
-            self, "Введите число", "Яркость"
+            self, "Введите число", "Яркость(в диапазоне от -10 до 10)"
         )
         if okBtnPressed:
             brightness = i
-            self.brightness_edit(brightness)
-
+            if brightness.isdigit():
+                self.brightness_edit(brightness)
+            else:
+                self.showDialog()
+                self.brightness_f()
 
     def brightness_edit(self, brightness):
+        # функция для изменения яркости изображения
         self.im = self.fname
         source = Image.open(self.im)
         result = Image.new('RGB', source.size)
@@ -253,17 +262,23 @@ class MyWidget(QMainWindow):
 
                 result.putpixel((x, y), (red, green, blue))
         self.pixmap_f(ImageQt(result))
-        # result.save('/home/odmin/BRIGHTNESS.jpg')
+
 
     def contrast_f(self):
+        # функция для вывода диалогового окна для ввода значения контрастности
         i, okBtnPressed = QInputDialog.getText(
-            self, "Введите число", "Контрастность"
+            self, "Введите число ", "Контрастность(в диапазоне от -10 до 10)"
         )
         if okBtnPressed:
             contrast = i
-            self.contrast_edit(contrast)
+            if contrast.isdigit():
+                self.contrast_edit(contrast)
+            else:
+                self.showDialog()
+                self.contrast_f()
 
     def contrast_edit(self, contrast):
+        # функция для изменения контрастности изображения
         source = Image.open(self.fname)
         self.im = Image.new('RGB', source.size)
 
